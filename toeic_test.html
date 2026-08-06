@@ -1,0 +1,892 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>TOEIC 練習測驗</title>
+<style>
+  :root {
+    --bg: #E7E3D6;
+    --paper: #FAF8F1;
+    --ink: #21222E;
+    --muted: #6E6A5C;
+    --line: #D9D3C2;
+    --accent: #2A4BD8;
+    --accent-deep: #17307E;
+    --accent-tint: #E7ECFC;
+    --seal: #B33B3B;
+    --seal-tint: #F7E7E5;
+    --correct: #1F7A4D;
+    --correct-tint: #E4F3EA;
+    --shadow: rgba(33,34,46,0.16);
+    --pad: 30px;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root {
+      --bg: #0D0E13;
+      --paper: #191B23;
+      --ink: #ECE9DE;
+      --muted: #9B9686;
+      --line: #2C2E3B;
+      --accent: #8DA0FF;
+      --accent-deep: #C2CCFF;
+      --accent-tint: rgba(141,160,255,0.16);
+      --seal: #E2827A;
+      --seal-tint: rgba(226,130,122,0.16);
+      --correct: #4FBE86;
+      --correct-tint: rgba(79,190,134,0.16);
+      --shadow: rgba(0,0,0,0.55);
+    }
+  }
+
+  * { box-sizing: border-box; }
+  html, body { height: 100%; }
+  body {
+    margin: 0;
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", "Microsoft JhengHei", "PingFang TC", "Noto Sans TC", Roboto, sans-serif;
+    background: var(--bg);
+    color: var(--ink);
+    min-height: 100vh;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 28px 16px;
+  }
+
+  .font-display { font-family: "Iowan Old Style", "Palatino Linotype", Georgia, "Times New Roman", serif; }
+  .font-mono { font-family: "SFMono-Regular", Consolas, "Liberation Mono", Menlo, monospace; font-variant-numeric: tabular-nums; }
+
+  .stage { width: 100%; max-width: 460px; }
+
+  .ticket {
+    position: relative;
+    background: var(--paper);
+    border-radius: 18px;
+    box-shadow: 0 18px 40px -12px var(--shadow), 0 2px 0 var(--line) inset;
+    padding: var(--pad);
+    background-image: repeating-linear-gradient(
+      to bottom,
+      transparent 0,
+      transparent 27px,
+      color-mix(in srgb, var(--line) 55%, transparent) 28px
+    );
+    background-position: 0 96px;
+  }
+
+  .eyebrow {
+    font-size: 0.68rem;
+    letter-spacing: 0.14em;
+    text-transform: uppercase;
+    color: var(--accent);
+    font-weight: 700;
+    margin: 0 0 4px;
+  }
+  .ticket h1 {
+    font-size: 1.5rem;
+    margin: 0 0 2px;
+    text-wrap: balance;
+    line-height: 1.15;
+  }
+  .ticket-sub {
+    color: var(--muted);
+    font-size: 0.82rem;
+    margin-bottom: 18px;
+  }
+
+  .perf {
+    position: relative;
+    height: 0;
+    border-top: 2px dashed var(--line);
+    margin: 18px calc(var(--pad) * -1) 18px;
+  }
+  .perf::before, .perf::after {
+    content: "";
+    position: absolute;
+    top: 50%;
+    width: 20px;
+    height: 20px;
+    background: var(--bg);
+    border-radius: 50%;
+    transform: translateY(-50%);
+  }
+  .perf::before { left: -10px; }
+  .perf::after { right: -10px; }
+
+  /* Login ticket */
+  .overlay {
+    position: fixed;
+    inset: 0;
+    background: color-mix(in srgb, var(--ink) 55%, transparent);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 50;
+    padding: 20px;
+  }
+  .punch-row {
+    display: flex;
+    gap: 10px;
+    justify-content: center;
+    margin-bottom: 14px;
+  }
+  .punch-row span {
+    width: 7px; height: 7px;
+    border-radius: 50%;
+    background: var(--bg);
+    box-shadow: 0 0 0 1.5px var(--line) inset;
+  }
+  .modal-title { text-align: center; }
+  .field-label {
+    font-size: 0.72rem;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    color: var(--muted);
+    margin-bottom: 8px;
+    display: block;
+  }
+  input[type="text"] {
+    width: 100%;
+    padding: 8px 2px 10px;
+    font-size: 1.05rem;
+    font-family: inherit;
+    color: var(--ink);
+    background: transparent;
+    border: none;
+    border-bottom: 2px solid var(--line);
+    margin-bottom: 22px;
+  }
+  input[type="text"]::placeholder { color: var(--muted); opacity: 0.7; }
+  input[type="text"]:focus-visible { outline: none; border-bottom-color: var(--accent); }
+
+  button {
+    cursor: pointer;
+    font-family: inherit;
+    font-size: 0.95rem;
+    border: none;
+    border-radius: 10px;
+    padding: 12px 18px;
+    transition: background 0.15s ease, transform 0.05s ease, border-color 0.15s ease, opacity 0.15s ease;
+  }
+  button:active { transform: scale(0.98); }
+  button:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+
+  .btn-stamp {
+    background: var(--accent);
+    color: var(--paper);
+    width: 100%;
+    padding: 13px;
+    font-size: 1rem;
+    font-weight: 700;
+    letter-spacing: 0.02em;
+  }
+  .btn-stamp:hover { background: var(--accent-deep); }
+
+  /* Ticket header (candidate strip) */
+  .cand-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    gap: 10px;
+  }
+  .cand-name { font-size: 1.05rem; font-weight: 700; }
+  .cand-meta { color: var(--muted); font-size: 0.78rem; margin-top: 2px; }
+
+  .stamp {
+    border: 2px solid var(--accent);
+    border-radius: 10px;
+    padding: 6px 12px;
+    text-align: center;
+    transform: rotate(-4deg);
+    color: var(--accent);
+    white-space: nowrap;
+  }
+  .stamp .stamp-score { font-size: 1.05rem; font-weight: 700; line-height: 1; }
+  .stamp .stamp-label { font-size: 0.58rem; letter-spacing: 0.1em; text-transform: uppercase; opacity: 0.85; }
+
+  /* Question dot navigator */
+  .dots { display: flex; flex-wrap: wrap; gap: 6px; margin-bottom: 18px; }
+  .dot {
+    width: 26px; height: 26px;
+    border-radius: 50%;
+    border: 1.5px solid var(--line);
+    background: transparent;
+    color: var(--muted);
+    font-family: "SFMono-Regular", Consolas, "Liberation Mono", Menlo, monospace;
+    font-size: 0.68rem;
+    font-weight: 700;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 0;
+  }
+  .dot.answered { border-color: var(--accent); background: var(--accent-tint); color: var(--accent); }
+  .dot.current { box-shadow: 0 0 0 2px var(--accent); }
+  .dot.correct { border-color: var(--correct); background: var(--correct-tint); color: var(--correct); }
+  .dot.incorrect { border-color: var(--seal); background: var(--seal-tint); color: var(--seal); }
+
+  .q-count { color: var(--muted); font-size: 0.8rem; margin-bottom: 8px; letter-spacing: 0.02em; }
+  .passage {
+    background: var(--accent-tint);
+    border-left: 3px solid var(--accent);
+    padding: 12px 14px;
+    border-radius: 4px 8px 8px 4px;
+    font-size: 0.88rem;
+    color: var(--ink);
+    margin-bottom: 14px;
+    line-height: 1.55;
+  }
+  .question-text {
+    font-size: 1.05rem;
+    font-weight: 600;
+    margin-bottom: 16px;
+    line-height: 1.5;
+    text-wrap: balance;
+  }
+
+  .options { display: flex; flex-direction: column; gap: 9px; margin-bottom: 16px; }
+  .option-btn {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    text-align: left;
+    background: transparent;
+    border: 1.5px solid var(--line);
+    border-radius: 10px;
+    padding: 10px 14px;
+    font-size: 0.95rem;
+    color: var(--ink);
+    width: 100%;
+    font-family: inherit;
+  }
+  .option-btn:hover:not(:disabled) { border-color: var(--accent); background: var(--accent-tint); }
+  .bubble {
+    flex: none;
+    width: 26px; height: 26px;
+    border-radius: 50%;
+    border: 1.5px solid var(--line);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-family: "SFMono-Regular", Consolas, "Liberation Mono", Menlo, monospace;
+    font-size: 0.78rem;
+    font-weight: 700;
+    color: var(--muted);
+  }
+  .option-btn.selected { border-color: var(--accent); background: var(--accent-tint); color: var(--accent); font-weight: 600; }
+  .option-btn.selected .bubble { border-color: var(--accent); background: var(--accent); color: var(--paper); }
+  .option-btn.correct { border-color: var(--correct); background: var(--correct-tint); color: var(--correct); font-weight: 600; }
+  .option-btn.correct .bubble { border-color: var(--correct); background: var(--correct); color: var(--paper); }
+  .option-btn.incorrect { border-color: var(--seal); background: var(--seal-tint); color: var(--seal); font-weight: 600; }
+  .option-btn.incorrect .bubble { border-color: var(--seal); background: var(--seal); color: var(--paper); }
+
+  .warn-banner {
+    background: var(--seal-tint);
+    border: 1px solid var(--seal);
+    color: var(--seal);
+    padding: 10px 14px;
+    border-radius: 10px;
+    font-size: 0.85rem;
+    margin-bottom: 14px;
+  }
+
+  .feedback {
+    border-radius: 10px;
+    padding: 12px 14px;
+    font-size: 0.87rem;
+    line-height: 1.6;
+  }
+  .feedback.correct-fb { background: var(--correct-tint); color: var(--correct); border: 1px solid var(--correct); }
+  .feedback.incorrect-fb { background: var(--seal-tint); color: var(--seal); border: 1px solid var(--seal); }
+  .feedback .fb-title { font-weight: 700; margin-bottom: 4px; }
+  .feedback .fb-body { color: var(--ink); opacity: 0.9; }
+
+  .controls { display: flex; gap: 10px; }
+  .btn-prev { background: transparent; border: 1.5px solid var(--line); color: var(--ink); flex: 1; font-weight: 600; }
+  .btn-prev:hover:not(:disabled) { border-color: var(--accent); color: var(--accent); }
+  .btn-prev:disabled { opacity: 0.35; cursor: not-allowed; }
+  .btn-next { background: var(--accent); color: var(--paper); flex: 1; font-weight: 700; }
+  .btn-next:hover { background: var(--accent-deep); }
+  .btn-more { background: var(--accent); color: var(--paper); flex: 1; font-weight: 700; }
+  .btn-more:hover { background: var(--accent-deep); }
+  .btn-quit { background: transparent; color: var(--seal); border: 1.5px solid var(--seal); flex: 1; font-weight: 700; }
+  .btn-quit:hover { background: var(--seal-tint); }
+
+  /* Tag label (stamp-style small badge, reused by summary + finished screens) */
+  .tag-label {
+    display: inline-block;
+    border: 2px solid var(--seal);
+    color: var(--seal);
+    font-size: 0.7rem;
+    font-weight: 700;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    padding: 3px 10px;
+    border-radius: 6px;
+    transform: rotate(-3deg);
+    margin-bottom: 14px;
+  }
+
+  /* Review (post-submit) */
+  .summary { text-align: center; margin-bottom: 8px; }
+  .summary-score {
+    font-size: 2rem;
+    font-weight: 700;
+    color: var(--ink);
+    margin: 2px 0 2px;
+  }
+  .summary-pct { color: var(--muted); font-size: 0.85rem; margin-bottom: 6px; }
+  .summary-cum { color: var(--ink); font-size: 0.85rem; font-weight: 600; margin-bottom: 6px; }
+
+  .review-list { display: flex; flex-direction: column; margin-bottom: 18px; }
+  .review-item { padding: 16px 0; border-top: 1px dashed var(--line); }
+  .review-item:first-child { border-top: none; padding-top: 0; }
+
+  /* Finished ticket */
+  .finished { text-align: center; }
+  .finished .big-score {
+    font-family: "SFMono-Regular", Consolas, "Liberation Mono", Menlo, monospace;
+    font-variant-numeric: tabular-nums;
+    font-size: 2.6rem;
+    font-weight: 700;
+    color: var(--ink);
+    margin: 4px 0 2px;
+  }
+  .finished .pct { color: var(--muted); margin-bottom: 22px; font-size: 0.92rem; }
+  .finished .btn-stamp { max-width: 220px; margin: 0 auto; }
+
+  .hidden { display: none !important; }
+
+  @media (prefers-reduced-motion: reduce) {
+    * { animation-duration: 0.001ms !important; transition-duration: 0.001ms !important; }
+  }
+
+  @media (max-width: 400px) {
+    .ticket { padding: 22px; }
+    .perf { margin: 18px -22px; }
+  }
+</style>
+</head>
+<body>
+
+<div class="stage">
+
+  <div class="overlay" id="loginOverlay">
+    <div class="ticket" style="max-width:360px;">
+      <div class="punch-row"><span></span><span></span><span></span><span></span><span></span></div>
+      <div class="modal-title">
+        <div class="eyebrow">Official Practice Ticket</div>
+        <h1 class="font-display">TOEIC 練習測驗</h1>
+        <p class="ticket-sub">請填寫姓名或學號以領取測驗票</p>
+      </div>
+      <div class="perf" style="margin-left:calc(var(--pad) * -1); margin-right:calc(var(--pad) * -1);"></div>
+      <label class="field-label" for="userNameInput">考生 / Candidate</label>
+      <input type="text" id="userNameInput" placeholder="姓名或學號" autocomplete="off">
+      <button class="btn-stamp" id="startBtn">Start</button>
+    </div>
+  </div>
+
+  <div class="ticket hidden" id="quizCard">
+    <div class="cand-row">
+      <div>
+        <div class="eyebrow" id="ticketNo">Ticket No. —</div>
+        <div class="cand-name" id="userInfoDisplay">—</div>
+        <div class="cand-meta" id="issueDate">發行日期 —</div>
+      </div>
+      <div class="stamp">
+        <div class="stamp-score font-mono" id="stampValue">0 / 10</div>
+        <div class="stamp-label" id="stampLabel">Answered</div>
+      </div>
+    </div>
+
+    <div class="perf"></div>
+
+    <div class="dots" id="dotsRow"></div>
+
+    <div id="answeringView">
+      <div class="q-count font-mono" id="qCount">Q.01 / 10</div>
+      <div class="passage hidden" id="passageBox"></div>
+      <div class="question-text" id="questionText"></div>
+      <div class="options" id="optionsBox"></div>
+      <div class="warn-banner hidden" id="warnBanner">請完成所有題目後再送出測驗，已為您跳至尚未作答的題目。</div>
+      <div class="controls">
+        <button class="btn-prev" id="prevBtn">Previous 上一題</button>
+        <button class="btn-next" id="nextBtn">Next 下一題</button>
+      </div>
+    </div>
+
+    <div id="reviewView" class="hidden">
+      <div class="summary">
+        <div class="tag-label">Graded 已批改</div>
+        <div class="summary-score font-mono" id="summaryScore">0 / 10</div>
+        <div class="summary-pct" id="summaryPct">正確率 0%</div>
+        <div class="summary-cum font-mono" id="summaryCum">累計總分 0 / 0</div>
+      </div>
+      <div class="review-list" id="reviewList"></div>
+      <div class="controls">
+        <button class="btn-more" id="moreBtn">More 開始新測驗</button>
+        <button class="btn-quit" id="quitBtn">Quit 結束測驗</button>
+      </div>
+    </div>
+  </div>
+
+  <div class="ticket finished hidden" id="finishedCard">
+    <div class="tag-label">Completed 已結束</div>
+    <div class="ticket-sub" id="finishedUser"></div>
+    <div class="big-score" id="finalScoreText">0 / 0</div>
+    <div class="pct" id="finalPct"></div>
+    <button class="btn-stamp" id="restartBtn">重新入場 Restart</button>
+  </div>
+
+</div>
+
+<script>
+(function () {
+  const questionBank = [
+    {
+      q: "The quarterly report ______ by the finance team before it is submitted to the board.",
+      options: ["reviews", "is reviewed", "reviewing", "review"],
+      correct: 1,
+      explanation: "此句主詞「report」是被審查的對象（被動），且為第三人稱單數，因此需要被動語態「is reviewed」。"
+    },
+    {
+      q: "Employees who wish to take leave must submit their requests ______ two weeks in advance.",
+      options: ["at least", "at most", "at last", "at once"],
+      correct: 0,
+      explanation: "「at least」表示「至少」，符合「至少提前兩週」的語意。「at most」意思相反（最多），「at last」為「終於」，「at once」為「立刻」，皆不符合句意。"
+    },
+    {
+      q: "Mr. Tanaka's presentation was so ______ that several clients asked for a follow-up meeting.",
+      options: ["impress", "impressive", "impressively", "impression"],
+      correct: 1,
+      explanation: "「so + 形容詞 + that」句型需要形容詞，「impressive」（令人印象深刻的）為形容詞，符合文法規則。"
+    },
+    {
+      q: "The new software update will be installed ______ all employees have logged off their systems.",
+      options: ["despite", "unless", "once", "although"],
+      correct: 2,
+      explanation: "「once」作連接詞使用，表示「一旦…就…」，符合「所有員工登出後才安裝更新」的邏輯順序。despite/although 用於表示讓步，unless 表示「除非」，皆不符合語意。"
+    },
+    {
+      q: "Sales figures ______ significantly since the marketing campaign launched last month.",
+      options: ["increase", "increased", "have increased", "increasing"],
+      correct: 2,
+      explanation: "「since + 過去時間點」需搭配現在完成式，故選「have increased」，表示從過去某時間點持續到現在的變化。"
+    },
+    {
+      q: "Thank you for your recent purchase. Please note that all returns must be accompanied by the original receipt. ______, items must be returned within 30 days of purchase.",
+      options: ["In addition", "However", "For example", "Nevertheless"],
+      correct: 0,
+      explanation: "此句在前一句之後補充「另一項規定」（30天內退貨），屬於補充說明的關係，故用「In addition」（此外）。「However」與「Nevertheless」表轉折，「For example」表舉例，皆不符合。"
+    },
+    {
+      passage: "The Riverside Office building will undergo renovations from September 1 to September 15. During this period, the main lobby entrance will be closed, and all staff should use the east entrance on Maple Street. Parking in Lot B will also be unavailable; employees are asked to park in Lot C instead.",
+      q: "Why is the main lobby entrance being closed?",
+      options: ["For a security inspection", "For renovations", "For a parking upgrade", "For a fire drill"],
+      correct: 1,
+      explanation: "文中明確提到大樓將進行整修（undergo renovations），因此大廳入口關閉的原因是整修工程。"
+    },
+    {
+      passage: "The Riverside Office building will undergo renovations from September 1 to September 15. During this period, the main lobby entrance will be closed, and all staff should use the east entrance on Maple Street. Parking in Lot B will also be unavailable; employees are asked to park in Lot C instead.",
+      q: "What should employees do during the renovation period?",
+      options: ["Work from home", "Use the east entrance", "Park in Lot B", "Contact building security"],
+      correct: 1,
+      explanation: "文中提到「all staff should use the east entrance on Maple Street」，因此員工應改用東側入口。"
+    },
+    {
+      passage: "The Riverside Office building will undergo renovations from September 1 to September 15. During this period, the main lobby entrance will be closed, and all staff should use the east entrance on Maple Street. Parking in Lot B will also be unavailable; employees are asked to park in Lot C instead.",
+      q: "According to the notice, how long will the renovation last?",
+      options: ["One week", "Two weeks", "Three weeks", "One month"],
+      correct: 1,
+      explanation: "整修期間為 9 月 1 日至 9 月 15 日，共約兩週，故答案為「Two weeks」。"
+    },
+    {
+      passage: "The Riverside Office building will undergo renovations from September 1 to September 15. During this period, the main lobby entrance will be closed, and all staff should use the east entrance on Maple Street. Parking in Lot B will also be unavailable; employees are asked to park in Lot C instead.",
+      q: "Where should employees park during this time?",
+      options: ["Lot A", "Lot B", "Lot C", "Street parking"],
+      correct: 2,
+      explanation: "文中提到「Parking in Lot B will also be unavailable; employees are asked to park in Lot C instead」，因此員工應改停 Lot C。"
+    },
+    {
+      q: "Please ______ to the attached file for further details regarding the contract.",
+      options: ["refer", "referring", "to refer", "referred"],
+      correct: 0,
+      explanation: "祈使句（imperative sentence）的動詞須用原形動詞，故選「refer」（refer to... 查閱）。"
+    },
+    {
+      q: "The meeting has been rescheduled ______ Friday due to a conflict in the conference room.",
+      options: ["at", "in", "to", "on"],
+      correct: 2,
+      explanation: "「reschedule to + 時間」表示「改期至…」，為固定用法，故選「to」。"
+    },
+    {
+      q: "All visitors must sign in at the front desk ______ entering the building.",
+      options: ["before", "after", "during", "while"],
+      correct: 0,
+      explanation: "訪客須在進入大樓「之前」先在櫃檯登記，故選「before」（在…之前）。"
+    },
+    {
+      q: "The manager was impressed by the intern's ______ to detail throughout the project.",
+      options: ["attentive", "attention", "attentively", "attend"],
+      correct: 1,
+      explanation: "「attention to detail」為固定用法，此處作受詞，需名詞「attention」（注意力），故選(B)。"
+    },
+    {
+      q: "If the shipment does not arrive by Friday, we ______ the client immediately.",
+      options: ["will notify", "notify", "notified", "notifying"],
+      correct: 0,
+      explanation: "條件句中 if 子句用現在式描述未來可能發生的情況，主要子句則用未來式「will notify」。"
+    },
+    {
+      q: "The company's profits have grown ______ over the past three years.",
+      options: ["steady", "steadily", "steadier", "steadiness"],
+      correct: 1,
+      explanation: "修飾動詞「grown」需用副詞，故選「steadily」（穩定地）。"
+    },
+    {
+      q: "______ the heavy rain, the outdoor event proceeded as planned.",
+      options: ["Because", "Despite", "Due to", "Since"],
+      correct: 1,
+      explanation: "句意為「儘管下大雨，戶外活動仍照常進行」，表示讓步/對比，故選「Despite」。「Due to」雖然也接名詞，但表示原因，與句意（活動不受雨影響）不符；「Because」與「Since」需接子句（主詞+動詞）。"
+    },
+    {
+      q: "Applicants are required to submit a résumé ______ with a cover letter.",
+      options: ["along", "alongside", "together", "along with"],
+      correct: 3,
+      explanation: "「along with」為固定片語，意思是「連同」，符合「連同求職信一起提交履歷」的語意。"
+    },
+    {
+      q: "The new policy aims to ______ waste and improve efficiency in the office.",
+      options: ["reduce", "reducing", "reduction", "reduced"],
+      correct: 0,
+      explanation: "「aim to + 原形動詞」為固定用法，故選「reduce」（原形動詞）。"
+    },
+    {
+      q: "Despite the delay, the project was completed ______ schedule.",
+      options: ["at", "on", "in", "by"],
+      correct: 1,
+      explanation: "「on schedule」為固定片語，意思是「按時、準時」，故選「on」。"
+    },
+    {
+      passage: "Order Confirmation: Thank you for your order #4521. Your items are expected to ship within 3–5 business days. You will receive a tracking number via email once your package has shipped. If you have any questions, please contact our customer service team at support@shopnow.com.",
+      q: "What will the customer receive by email?",
+      options: ["An invoice", "A tracking number", "A discount code", "A refund confirmation"],
+      correct: 1,
+      explanation: "文中提到「You will receive a tracking number via email once your package has shipped」，因此顧客會收到追蹤號碼。"
+    },
+    {
+      passage: "Order Confirmation: Thank you for your order #4521. Your items are expected to ship within 3–5 business days. You will receive a tracking number via email once your package has shipped. If you have any questions, please contact our customer service team at support@shopnow.com.",
+      q: "How long will it take for the items to ship?",
+      options: ["1-2 business days", "3-5 business days", "5-7 business days", "10 business days"],
+      correct: 1,
+      explanation: "文中明確指出「expected to ship within 3–5 business days」。"
+    },
+    {
+      passage: "Order Confirmation: Thank you for your order #4521. Your items are expected to ship within 3–5 business days. You will receive a tracking number via email once your package has shipped. If you have any questions, please contact our customer service team at support@shopnow.com.",
+      q: "How can the customer contact customer service?",
+      options: ["By phone", "By email", "By live chat", "By mail"],
+      correct: 1,
+      explanation: "文中提供的聯絡方式為電子郵件「support@shopnow.com」，故答案為透過電子郵件聯繫。"
+    },
+    {
+      q: "The board members will vote ______ the proposed budget at next week's meeting.",
+      options: ["on", "for", "about", "to"],
+      correct: 0,
+      explanation: "「vote on + 議題」為固定用法，表示「針對…進行表決」，故選「on」。"
+    }
+  ];
+
+  const ROUND_SIZE = 10;
+  const reduceMotion = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+
+  let userName = "";
+  let roundQuestions = [];
+  let userAnswers = [];
+  let currentIndex = 0;
+  let phase = "answering";
+  let cumulative = { correct: 0, total: 0 };
+
+  const loginOverlay = document.getElementById("loginOverlay");
+  const userNameInput = document.getElementById("userNameInput");
+  const startBtn = document.getElementById("startBtn");
+
+  const quizCard = document.getElementById("quizCard");
+  const ticketNo = document.getElementById("ticketNo");
+  const issueDate = document.getElementById("issueDate");
+  const userInfoDisplay = document.getElementById("userInfoDisplay");
+  const stampValue = document.getElementById("stampValue");
+  const stampLabel = document.getElementById("stampLabel");
+  const dotsRow = document.getElementById("dotsRow");
+
+  const answeringView = document.getElementById("answeringView");
+  const qCount = document.getElementById("qCount");
+  const passageBox = document.getElementById("passageBox");
+  const questionText = document.getElementById("questionText");
+  const optionsBox = document.getElementById("optionsBox");
+  const warnBanner = document.getElementById("warnBanner");
+  const prevBtn = document.getElementById("prevBtn");
+  const nextBtn = document.getElementById("nextBtn");
+
+  const reviewView = document.getElementById("reviewView");
+  const summaryScore = document.getElementById("summaryScore");
+  const summaryPct = document.getElementById("summaryPct");
+  const summaryCum = document.getElementById("summaryCum");
+  const reviewList = document.getElementById("reviewList");
+  const moreBtn = document.getElementById("moreBtn");
+  const quitBtn = document.getElementById("quitBtn");
+
+  const finishedCard = document.getElementById("finishedCard");
+  const finishedUser = document.getElementById("finishedUser");
+  const finalScoreText = document.getElementById("finalScoreText");
+  const finalPct = document.getElementById("finalPct");
+  const restartBtn = document.getElementById("restartBtn");
+
+  function shuffle(arr) {
+    const a = arr.slice();
+    for (let i = a.length - 1; i > 0; i--) {
+      const j = Math.floor(Math.random() * (i + 1));
+      [a[i], a[j]] = [a[j], a[i]];
+    }
+    return a;
+  }
+
+  function sampleRound() {
+    const idxs = shuffle(questionBank.map((_, i) => i)).slice(0, ROUND_SIZE);
+    roundQuestions = idxs.map((i) => questionBank[i]);
+    userAnswers = new Array(ROUND_SIZE).fill(null);
+    currentIndex = 0;
+    phase = "answering";
+  }
+
+  function updateStamp() {
+    if (phase === "answering") {
+      stampLabel.textContent = "Answered 已答";
+      const answeredCount = userAnswers.filter((a) => a !== null).length;
+      stampValue.textContent = `${answeredCount} / ${ROUND_SIZE}`;
+    } else {
+      stampLabel.textContent = "Total 累計";
+      stampValue.textContent = `${cumulative.correct} / ${cumulative.total}`;
+    }
+  }
+
+  function renderDots() {
+    dotsRow.innerHTML = "";
+    for (let i = 0; i < ROUND_SIZE; i++) {
+      const d = document.createElement("button");
+      d.type = "button";
+      d.className = "dot";
+      d.textContent = String(i + 1);
+      if (phase === "answering") {
+        if (userAnswers[i] !== null) d.classList.add("answered");
+        if (i === currentIndex) d.classList.add("current");
+        d.addEventListener("click", () => {
+          currentIndex = i;
+          renderAnswering();
+        });
+      } else {
+        const isCorrect = userAnswers[i] === roundQuestions[i].correct;
+        d.classList.add(isCorrect ? "correct" : "incorrect");
+        d.addEventListener("click", () => scrollReviewTo(i));
+      }
+      dotsRow.appendChild(d);
+    }
+  }
+
+  function renderAnswering() {
+    answeringView.classList.remove("hidden");
+    reviewView.classList.add("hidden");
+    warnBanner.classList.add("hidden");
+
+    const q = roundQuestions[currentIndex];
+    qCount.textContent = `Q.${String(currentIndex + 1).padStart(2, "0")} / ${ROUND_SIZE}`;
+
+    if (q.passage) {
+      passageBox.textContent = q.passage;
+      passageBox.classList.remove("hidden");
+    } else {
+      passageBox.classList.add("hidden");
+    }
+    questionText.textContent = q.q;
+
+    optionsBox.innerHTML = "";
+    q.options.forEach((opt, i) => {
+      const btn = document.createElement("button");
+      btn.className = "option-btn";
+      if (userAnswers[currentIndex] === i) btn.classList.add("selected");
+      btn.innerHTML = `<span class="bubble">${String.fromCharCode(65 + i)}</span><span class="opt-text"></span>`;
+      btn.querySelector(".opt-text").textContent = opt;
+      btn.addEventListener("click", () => {
+        userAnswers[currentIndex] = i;
+        renderAnswering();
+      });
+      optionsBox.appendChild(btn);
+    });
+
+    prevBtn.disabled = currentIndex === 0;
+    nextBtn.textContent = currentIndex === ROUND_SIZE - 1 ? "Submit 送出測驗" : "Next 下一題";
+
+    updateStamp();
+    renderDots();
+  }
+
+  function trySubmit() {
+    const firstUnanswered = userAnswers.findIndex((a) => a === null);
+    if (firstUnanswered !== -1) {
+      currentIndex = firstUnanswered;
+      renderAnswering();
+      warnBanner.classList.remove("hidden");
+      return;
+    }
+    gradeRound();
+  }
+
+  function gradeRound() {
+    let roundCorrect = 0;
+    roundQuestions.forEach((q, i) => {
+      if (userAnswers[i] === q.correct) roundCorrect++;
+    });
+    cumulative.correct += roundCorrect;
+    cumulative.total += ROUND_SIZE;
+    phase = "review";
+    renderReview(roundCorrect);
+  }
+
+  function renderReview(roundCorrect) {
+    answeringView.classList.add("hidden");
+    reviewView.classList.remove("hidden");
+
+    updateStamp();
+    renderDots();
+
+    summaryScore.textContent = `${roundCorrect} / ${ROUND_SIZE}`;
+    summaryPct.textContent = `正確率 ${Math.round((roundCorrect / ROUND_SIZE) * 100)}%`;
+    summaryCum.textContent = `累計總分 ${cumulative.correct} / ${cumulative.total}`;
+
+    reviewList.innerHTML = "";
+    roundQuestions.forEach((q, i) => {
+      const item = document.createElement("div");
+      item.className = "review-item";
+      item.id = `review-item-${i}`;
+
+      const label = document.createElement("div");
+      label.className = "q-count font-mono";
+      label.textContent = `Q.${String(i + 1).padStart(2, "0")}`;
+      item.appendChild(label);
+
+      if (q.passage) {
+        const p = document.createElement("div");
+        p.className = "passage";
+        p.textContent = q.passage;
+        item.appendChild(p);
+      }
+
+      const qt = document.createElement("div");
+      qt.className = "question-text";
+      qt.textContent = q.q;
+      item.appendChild(qt);
+
+      const opts = document.createElement("div");
+      opts.className = "options";
+      q.options.forEach((opt, oi) => {
+        const b = document.createElement("div");
+        b.className = "option-btn";
+        if (oi === q.correct) b.classList.add("correct");
+        if (oi === userAnswers[i] && oi !== q.correct) b.classList.add("incorrect");
+        b.innerHTML = `<span class="bubble">${String.fromCharCode(65 + oi)}</span><span class="opt-text"></span>`;
+        b.querySelector(".opt-text").textContent = opt;
+        opts.appendChild(b);
+      });
+      item.appendChild(opts);
+
+      const isCorrect = userAnswers[i] === q.correct;
+      const fb = document.createElement("div");
+      fb.className = "feedback " + (isCorrect ? "correct-fb" : "incorrect-fb");
+      const fbTitle = document.createElement("div");
+      fbTitle.className = "fb-title";
+      fbTitle.textContent = isCorrect ? "✓ 答對了！" : "✗ 答錯了 — 說明（繁體中文）";
+      fb.appendChild(fbTitle);
+      if (!isCorrect) {
+        const fbBody = document.createElement("div");
+        fbBody.className = "fb-body";
+        fbBody.textContent = q.explanation;
+        fb.appendChild(fbBody);
+      }
+      item.appendChild(fb);
+
+      reviewList.appendChild(item);
+    });
+  }
+
+  function scrollReviewTo(i) {
+    const el = document.getElementById(`review-item-${i}`);
+    if (el) el.scrollIntoView({ behavior: reduceMotion ? "auto" : "smooth", block: "start" });
+  }
+
+  function startQuiz() {
+    const name = userNameInput.value.trim();
+    if (!name) {
+      userNameInput.focus();
+      userNameInput.style.borderBottomColor = "var(--seal)";
+      return;
+    }
+    userName = name;
+    userInfoDisplay.textContent = userName;
+    ticketNo.textContent = `Ticket No. TC-${String(Math.floor(1000 + Math.random() * 9000))}`;
+    issueDate.textContent = `發行日期 ${new Date().toLocaleDateString("zh-TW")}`;
+    cumulative = { correct: 0, total: 0 };
+
+    sampleRound();
+    loginOverlay.classList.add("hidden");
+    finishedCard.classList.add("hidden");
+    quizCard.classList.remove("hidden");
+    renderAnswering();
+  }
+
+  function showFinished() {
+    quizCard.classList.add("hidden");
+    finishedCard.classList.remove("hidden");
+    finishedUser.textContent = `${userName} 的測驗結果`;
+    finalScoreText.textContent = `${cumulative.correct} / ${cumulative.total}`;
+    const pct = cumulative.total > 0 ? Math.round((cumulative.correct / cumulative.total) * 100) : 0;
+    finalPct.textContent = `正確率：${pct}%`;
+  }
+
+  startBtn.addEventListener("click", startQuiz);
+  userNameInput.addEventListener("keydown", (e) => {
+    if (e.key === "Enter") startQuiz();
+  });
+  userNameInput.addEventListener("input", () => {
+    userNameInput.style.borderBottomColor = "";
+  });
+
+  prevBtn.addEventListener("click", () => {
+    if (currentIndex > 0) {
+      currentIndex--;
+      renderAnswering();
+    }
+  });
+  nextBtn.addEventListener("click", () => {
+    if (currentIndex < ROUND_SIZE - 1) {
+      currentIndex++;
+      renderAnswering();
+    } else {
+      trySubmit();
+    }
+  });
+
+  moreBtn.addEventListener("click", () => {
+    sampleRound();
+    renderAnswering();
+  });
+  quitBtn.addEventListener("click", showFinished);
+
+  restartBtn.addEventListener("click", () => {
+    userNameInput.value = "";
+    finishedCard.classList.add("hidden");
+    loginOverlay.classList.remove("hidden");
+    userNameInput.focus();
+  });
+})();
+</script>
+
+</body>
+</html>
