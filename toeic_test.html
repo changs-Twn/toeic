@@ -753,6 +753,7 @@
   function renderReview(roundCorrect) {
     answeringView.classList.add("hidden");
     reviewView.classList.remove("hidden");
+    window.scrollTo({ top: 0, behavior: reduceMotion ? "auto" : "smooth" });
 
     updateStamp();
     renderDots();
